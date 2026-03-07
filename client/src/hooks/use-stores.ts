@@ -1,27 +1,27 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
-import { type InsertStore } from "@shared/schema";
+import { type InsertMerchant } from "@shared/schema";
 
 export function useStores() {
   return useQuery({
-    queryKey: [api.stores.list.path],
+    queryKey: [api.merchants.list.path],
     queryFn: async () => {
-      const res = await fetch(api.stores.list.path);
-      if (!res.ok) throw new Error("Failed to fetch stores");
-      return api.stores.list.responses[200].parse(await res.json());
+      const res = await fetch(api.merchants.list.path);
+      if (!res.ok) throw new Error("Failed to fetch merchants");
+      return api.merchants.list.responses[200].parse(await res.json());
     },
   });
 }
 
 export function useStore(id: number) {
   return useQuery({
-    queryKey: [api.stores.get.path, id],
+    queryKey: [api.merchants.get.path, id],
     queryFn: async () => {
-      const url = buildUrl(api.stores.get.path, { id });
+      const url = buildUrl(api.merchants.get.path, { id });
       const res = await fetch(url);
       if (res.status === 404) return null;
-      if (!res.ok) throw new Error("Failed to fetch store");
-      return api.stores.get.responses[200].parse(await res.json());
+      if (!res.ok) throw new Error("Failed to fetch merchant");
+      return api.merchants.get.responses[200].parse(await res.json());
     },
     enabled: !!id,
   });
@@ -30,17 +30,17 @@ export function useStore(id: number) {
 export function useCreateStore() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: InsertStore) => {
-      const res = await fetch(api.stores.create.path, {
-        method: api.stores.create.method,
+    mutationFn: async (data: InsertMerchant) => {
+      const res = await fetch(api.merchants.create.path, {
+        method: api.merchants.create.method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create store");
-      return api.stores.create.responses[201].parse(await res.json());
+      if (!res.ok) throw new Error("Failed to create merchant");
+      return api.merchants.create.responses[201].parse(await res.json());
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.stores.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.merchants.list.path] });
     },
   });
 }
@@ -48,19 +48,19 @@ export function useCreateStore() {
 export function useUpdateStore() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: { id: number } & Partial<InsertStore>) => {
-      const url = buildUrl(api.stores.update.path, { id });
+    mutationFn: async ({ id, ...updates }: { id: number } & Partial<InsertMerchant>) => {
+      const url = buildUrl(api.merchants.update.path, { id });
       const res = await fetch(url, {
-        method: api.stores.update.method,
+        method: api.merchants.update.method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updates),
       });
-      if (!res.ok) throw new Error("Failed to update store");
-      return api.stores.update.responses[200].parse(await res.json());
+      if (!res.ok) throw new Error("Failed to update merchant");
+      return api.merchants.update.responses[200].parse(await res.json());
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [api.stores.list.path] });
-      queryClient.invalidateQueries({ queryKey: [api.stores.get.path, variables.id] });
+      queryClient.invalidateQueries({ queryKey: [api.merchants.list.path] });
+      queryClient.invalidateQueries({ queryKey: [api.merchants.get.path, variables.id] });
     },
   });
 }

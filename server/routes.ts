@@ -6,57 +6,57 @@ import { z } from "zod";
 
 async function seedDatabase() {
   try {
-    const existingStores = await storage.getStores();
-    if (existingStores.length === 0) {
-      const store1 = await storage.createStore({
+    const existingMerchants = await storage.getMerchants();
+    if (existingMerchants.length === 0) {
+      const merchant1 = await storage.createMerchant({
         name: "Eletrônicos TechWorld",
-        description: "As últimas novidades em tecnologia e gadgets",
-        imageUrl: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=500&q=80",
-        active: true,
+        address: "Rua da Tecnologia, 123 - São Paulo, SP",
+        lat: -23.5505,
+        lng: -46.6333,
       });
       
-      const store2 = await storage.createStore({
+      const merchant2 = await storage.createMerchant({
         name: "Papelaria Criativa",
-        description: "Tudo para o seu escritório e estudos",
-        imageUrl: "https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?w=500&q=80",
-        active: true,
+        address: "Avenida Paulista, 1000 - São Paulo, SP",
+        lat: -23.5615,
+        lng: -46.6560,
       });
 
-      const store3 = await storage.createStore({
+      const merchant3 = await storage.createMerchant({
         name: "Auto Peças Central",
-        description: "Peças e acessórios para o seu veículo",
-        imageUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=500&q=80",
-        active: true,
+        address: "Rua do Comércio, 456 - São Paulo, SP",
+        lat: -23.5505,
+        lng: -46.6333,
       });
 
       await storage.createProduct({
-        storeId: store1.id,
+        merchantId: merchant1.id,
         name: "Fone de Ouvido Bluetooth",
         description: "Cancelamento de ruído e bateria de longa duração",
-        price: 19900,
-        imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
-        active: true,
+        price: 199.90,
+        category: "Eletrônicos",
+        image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
       });
 
       await storage.createProduct({
-        storeId: store2.id,
+        merchantId: merchant2.id,
         name: "Caderno Inteligente",
         description: "Folhas reposicionáveis e capa dura",
-        price: 8990,
-        imageUrl: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=500&q=80",
-        active: true,
+        price: 89.90,
+        category: "Papelaria",
+        image: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=500&q=80",
       });
 
       await storage.createProduct({
-        storeId: store3.id,
+        merchantId: merchant3.id,
         name: "Óleo para Motor 5W30",
         description: "Sintético de alta performance",
-        price: 4500,
-        imageUrl: "https://images.unsplash.com/photo-1635773054018-22c989ca400d?w=500&q=80",
-        active: true,
+        price: 45.00,
+        category: "Peças",
+        image: "https://images.unsplash.com/photo-1635773054018-22c989ca400d?w=500&q=80",
       });
       
-      console.log("Database seeded successfully with retail stores.");
+      console.log("Database seeded successfully with merchants.");
     }
   } catch (error) {
     console.error("Error seeding database:", error);
@@ -68,24 +68,24 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  app.get(api.stores.list.path, async (req, res) => {
-    const storesList = await storage.getStores();
-    res.json(storesList);
+  app.get(api.merchants.list.path, async (req, res) => {
+    const merchantsList = await storage.getMerchants();
+    res.json(merchantsList);
   });
 
-  app.get(api.stores.get.path, async (req, res) => {
-    const store = await storage.getStore(Number(req.params.id));
-    if (!store) {
-      return res.status(404).json({ message: 'Store not found' });
+  app.get(api.merchants.get.path, async (req, res) => {
+    const merchant = await storage.getMerchant(Number(req.params.id));
+    if (!merchant) {
+      return res.status(404).json({ message: 'Merchant not found' });
     }
-    res.json(store);
+    res.json(merchant);
   });
 
-  app.post(api.stores.create.path, async (req, res) => {
+  app.post(api.merchants.create.path, async (req, res) => {
     try {
-      const input = api.stores.create.input.parse(req.body);
-      const store = await storage.createStore(input);
-      res.status(201).json(store);
+      const input = api.merchants.create.input.parse(req.body);
+      const merchant = await storage.createMerchant(input);
+      res.status(201).json(merchant);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -94,11 +94,11 @@ export async function registerRoutes(
     }
   });
 
-  app.put(api.stores.update.path, async (req, res) => {
+  app.put(api.merchants.update.path, async (req, res) => {
     try {
-      const input = api.stores.update.input.parse(req.body);
-      const store = await storage.updateStore(Number(req.params.id), input);
-      res.json(store);
+      const input = api.merchants.update.input.parse(req.body);
+      const merchant = await storage.updateMerchant(Number(req.params.id), input);
+      res.json(merchant);
     } catch (err) {
       if (err instanceof z.ZodError) {
         return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
@@ -108,17 +108,17 @@ export async function registerRoutes(
   });
 
   app.get(api.products.list.path, async (req, res) => {
-    const storeId = req.query.storeId ? Number(req.query.storeId) : undefined;
-    const productsList = await storage.getProducts(storeId);
+    const merchantId = req.query.merchantId ? Number(req.query.merchantId) : undefined;
+    const productsList = await storage.getProducts(merchantId);
     res.json(productsList);
   });
 
   app.post(api.products.create.path, async (req, res) => {
     try {
       const bodySchema = api.products.create.input.extend({
-        storeId: z.coerce.number(),
+        merchantId: z.coerce.number(),
         price: z.coerce.number(),
-        promotionalPrice: z.coerce.number().nullable(),
+        promoPrice: z.coerce.number().nullable(),
         stock: z.coerce.number(),
       });
       const input = bodySchema.parse(req.body);
@@ -135,9 +135,9 @@ export async function registerRoutes(
   app.put(api.products.update.path, async (req, res) => {
     try {
       const bodySchema = api.products.update.input.extend({
-        storeId: z.coerce.number().optional(),
+        merchantId: z.coerce.number().optional(),
         price: z.coerce.number().optional(),
-        promotionalPrice: z.coerce.number().nullable().optional(),
+        promoPrice: z.coerce.number().nullable().optional(),
         stock: z.coerce.number().optional(),
       });
       const input = bodySchema.parse(req.body);
@@ -157,16 +157,16 @@ export async function registerRoutes(
   });
 
   app.get(api.orders.list.path, async (req, res) => {
-    const storeId = req.query.storeId ? Number(req.query.storeId) : undefined;
-    const ordersList = await storage.getOrders(storeId);
+    const merchantId = req.query.merchantId ? Number(req.query.merchantId) : undefined;
+    const ordersList = await storage.getOrders(merchantId);
     res.json(ordersList);
   });
 
   app.post(api.orders.create.path, async (req, res) => {
     try {
       const bodySchema = api.orders.create.input.extend({
-        storeId: z.coerce.number(),
-        totalPrice: z.coerce.number(),
+        merchantId: z.coerce.number(),
+        deliveryPrice: z.coerce.number(),
         items: z.array(z.object({
           productId: z.coerce.number(),
           quantity: z.coerce.number(),

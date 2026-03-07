@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertStoreSchema, insertProductSchema, stores, products, orders, orderItems, createOrderSchema } from './schema';
+import { insertMerchantSchema, insertProductSchema, merchants, products, orders, orderItems, createOrderSchema } from './schema';
 
 export const errorSchemas = {
   validation: z.object({ message: z.string(), field: z.string().optional() }),
@@ -8,37 +8,37 @@ export const errorSchemas = {
 };
 
 export const api = {
-  stores: {
+  merchants: {
     list: {
       method: 'GET' as const,
-      path: '/api/stores' as const,
+      path: '/api/merchants' as const,
       responses: {
-        200: z.array(z.custom<typeof stores.$inferSelect>()),
+        200: z.array(z.custom<typeof merchants.$inferSelect>()),
       },
     },
     get: {
       method: 'GET' as const,
-      path: '/api/stores/:id' as const,
+      path: '/api/merchants/:id' as const,
       responses: {
-        200: z.custom<typeof stores.$inferSelect>(),
+        200: z.custom<typeof merchants.$inferSelect>(),
         404: errorSchemas.notFound,
       },
     },
     create: {
       method: 'POST' as const,
-      path: '/api/stores' as const,
-      input: insertStoreSchema,
+      path: '/api/merchants' as const,
+      input: insertMerchantSchema,
       responses: {
-        201: z.custom<typeof stores.$inferSelect>(),
+        201: z.custom<typeof merchants.$inferSelect>(),
         400: errorSchemas.validation,
       },
     },
     update: {
       method: 'PUT' as const,
-      path: '/api/stores/:id' as const,
-      input: insertStoreSchema.partial(),
+      path: '/api/merchants/:id' as const,
+      input: insertMerchantSchema.partial(),
       responses: {
-        200: z.custom<typeof stores.$inferSelect>(),
+        200: z.custom<typeof merchants.$inferSelect>(),
         404: errorSchemas.notFound,
       },
     }
@@ -47,7 +47,7 @@ export const api = {
     list: {
       method: 'GET' as const,
       path: '/api/products' as const,
-      input: z.object({ storeId: z.string().optional() }).optional(),
+      input: z.object({ merchantId: z.string().optional() }).optional(),
       responses: {
         200: z.array(z.custom<typeof products.$inferSelect>()),
       },
@@ -83,7 +83,7 @@ export const api = {
     list: {
       method: 'GET' as const,
       path: '/api/orders' as const,
-      input: z.object({ storeId: z.string().optional() }).optional(),
+      input: z.object({ merchantId: z.string().optional() }).optional(),
       responses: {
         200: z.array(z.custom<typeof orders.$inferSelect & { items: typeof orderItems.$inferSelect[] }>()),
       },

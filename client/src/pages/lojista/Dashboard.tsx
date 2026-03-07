@@ -3,8 +3,8 @@ import { useStores } from "@/hooks/use-stores";
 import { useProducts, useCreateProduct, useUpdateProduct, useDeleteProduct } from "@/hooks/use-products";
 import { useOrders, useUpdateOrderStatus } from "@/hooks/use-orders";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { formatCurrency, parseCurrencyToCents } from "@/lib/utils";
-import { Store, Package, ClipboardList, Plus, Edit2, Trash2 } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { MapPin, Package, ClipboardList, Plus, Edit2, Trash2 } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -45,12 +45,12 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function LojistaDashboard() {
-  const [selectedStoreId, setSelectedStoreId] = useState<string>("");
-  const { data: stores } = useStores();
-  const storeId = selectedStoreId ? parseInt(selectedStoreId) : undefined;
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string>("");
+  const { data: merchants } = useStores();
+  const merchantId = selectedMerchantId ? parseInt(selectedMerchantId) : undefined;
   
-  const { data: products } = useProducts(storeId);
-  const { data: orders } = useOrders(storeId);
+  const { data: products } = useProducts(merchantId);
+  const { data: orders } = useOrders(merchantId);
 
   return (
     <AppLayout>
@@ -61,14 +61,14 @@ export default function LojistaDashboard() {
             <p className="text-muted-foreground">Gerencie seus produtos e pedidos.</p>
           </div>
           <div className="w-full md:w-64">
-            <Select value={selectedStoreId} onValueChange={setSelectedStoreId}>
+            <Select value={selectedMerchantId} onValueChange={setSelectedMerchantId}>
               <SelectTrigger className="bg-background shadow-sm border-primary/20 focus:ring-primary h-12">
-                <SelectValue placeholder="Selecione sua loja" />
+                <SelectValue placeholder="Selecione seu estabelecimento" />
               </SelectTrigger>
               <SelectContent>
-                {stores?.map((store) => (
-                  <SelectItem key={store.id} value={store.id.toString()}>
-                    {store.name}
+                {merchants?.map((merchant) => (
+                  <SelectItem key={merchant.id} value={merchant.id.toString()}>
+                    {merchant.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -76,10 +76,10 @@ export default function LojistaDashboard() {
           </div>
         </div>
 
-        {!storeId ? (
+        {!merchantId ? (
           <div className="flex flex-col items-center justify-center py-20 text-muted-foreground bg-card rounded-2xl border border-border shadow-sm">
-            <Store className="h-16 w-16 mb-4 opacity-20" />
-            <p className="text-xl font-medium">Por favor, selecione uma loja no topo para começar.</p>
+            <MapPin className="h-16 w-16 mb-4 opacity-20" />
+            <p className="text-xl font-medium">Por favor, selecione um estabelecimento no topo para começar.</p>
           </div>
         ) : (
           <Tabs defaultValue="pedidos" className="w-full">
@@ -99,8 +99,8 @@ export default function LojistaDashboard() {
                           {STATUS_LABELS[order.status]}
                         </Badge>
                       </div>
-                      <p className="text-muted-foreground"><span className="font-semibold text-foreground">Cliente:</span> {order.customerName}</p>
-                      <p className="text-muted-foreground"><span className="font-semibold text-foreground">Endereço:</span> {order.customerAddress}</p>
+                      <p className="text-muted-foreground"><span className="font-semibold text-foreground">Cliente:</span> {order.clientName}</p>
+                      <p className="text-muted-foreground"><span className="font-semibold text-foreground">Taxa de Entrega:</span> {formatCurrency(order.deliveryPrice)}</p>
                       
                       <div className="mt-4 pt-4 border-t border-border">
                         <p className="font-medium text-sm text-muted-foreground mb-2">Itens do Pedido:</p>
@@ -117,7 +117,7 @@ export default function LojistaDashboard() {
                         </ul>
                         <div className="mt-3 font-bold text-lg flex justify-between max-w-md">
                           <span>Total:</span>
-                          <span className="text-primary">{formatCurrency(order.totalPrice)}</span>
+                          <span className="text-primary">{formatCurrency(order.items.reduce((sum, item) => sum + item.price * item.quantity, 0))}</span>
                         </div>
                       </div>
                     </div>
@@ -140,25 +140,24 @@ export default function LojistaDashboard() {
             
             <TabsContent value="produtos">
               <div className="mb-6 flex justify-end">
-                <ProductDialog storeId={storeId} />
+                <ProductDialog merchantId={merchantId} />
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {products?.map(product => (
                   <div key={product.id} className="bg-card rounded-2xl border border-border overflow-hidden flex flex-col group hover-lift">
                     <div className="h-40 bg-muted relative">
-                      {product.imageUrl && <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />}
-                      {!product.active && <div className="absolute inset-0 bg-background/60 flex items-center justify-center font-bold">Inativo</div>}
+                      {product.image && <img src={product.image} alt={product.name} className="w-full h-full object-cover" />}
                     </div>
                     <div className="p-5 flex-1 flex flex-col">
                       <h3 className="font-bold text-lg mb-1">{product.name}</h3>
                       <p className="text-muted-foreground text-sm flex-1 mb-3 line-clamp-2">{product.description}</p>
                       <div className="flex justify-between items-center mt-auto pt-4 border-t border-border">
                         <div className="flex flex-col">
-                          {product.promotionalPrice ? (
+                          {product.promoPrice ? (
                             <>
                               <span className="text-xs text-muted-foreground line-through">{formatCurrency(product.price)}</span>
-                              <span className="font-bold text-primary text-lg">{formatCurrency(product.promotionalPrice)}</span>
+                              <span className="font-bold text-primary text-lg">{formatCurrency(product.promoPrice)}</span>
                             </>
                           ) : (
                             <span className="font-bold text-primary text-lg">{formatCurrency(product.price)}</span>
@@ -166,7 +165,7 @@ export default function LojistaDashboard() {
                           <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Estoque: {product.stock}</span>
                         </div>
                         <div className="flex gap-2">
-                          <ProductDialog storeId={storeId} product={product} />
+                          <ProductDialog merchantId={merchantId} product={product} />
                           <DeleteProductButton id={product.id} />
                         </div>
                       </div>
@@ -205,13 +204,12 @@ function OrderStatusSelect({ orderId, currentStatus }: { orderId: number, curren
   );
 }
 
-function ProductDialog({ storeId, product }: { storeId: number, product?: any }) {
+function ProductDialog({ merchantId, product }: { merchantId: number, product?: any }) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   
-  // Need to coerce price string from form to number in cents for backend
   const formSchema = insertProductSchema.extend({
     priceStr: z.string().min(1, "Preço é obrigatório"),
   });
@@ -219,30 +217,28 @@ function ProductDialog({ storeId, product }: { storeId: number, product?: any })
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      storeId,
+      merchantId,
       name: product?.name || "",
       description: product?.description || "",
-      priceStr: product ? (product.price / 100).toFixed(2).replace('.', ',') : "",
-      promotionalPriceStr: product?.promotionalPrice ? (product.promotionalPrice / 100).toFixed(2).replace('.', ',') : "",
+      priceStr: product ? (product.price).toFixed(2).replace('.', ',') : "",
+      promoPrice: product?.promoPrice || undefined,
       stock: product?.stock || 0,
       category: product?.category || "",
-      imageUrl: product?.imageUrl || "",
-      active: product ? product.active : true,
+      image: product?.image || "",
       price: product?.price || 0,
     }
   });
 
   const onSubmit = (values: any) => {
-    const cents = parseCurrencyToCents(values.priceStr);
-    const promotionalCents = values.promotionalPriceStr ? parseCurrencyToCents(values.promotionalPriceStr) : null;
+    const price = parseFloat(values.priceStr.replace(',', '.'));
+    const promoPrice = values.promoPrice ? parseFloat(String(values.promoPrice).replace(',', '.')) : undefined;
     const payload = { 
       ...values, 
-      price: cents,
-      promotionalPrice: promotionalCents,
+      price,
+      promoPrice,
       stock: parseInt(values.stock)
     };
     delete payload.priceStr;
-    delete payload.promotionalPriceStr;
 
     if (product) {
       updateProduct.mutate({ id: product.id, ...payload }, {
@@ -283,24 +279,14 @@ function ProductDialog({ storeId, product }: { storeId: number, product?: any })
               <FormField control={form.control} name="priceStr" render={({ field }) => (
                 <FormItem><FormLabel>Preço (R$)</FormLabel><FormControl><Input placeholder="15,90" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
               )} />
-              <FormField control={form.control} name="promotionalPriceStr" render={({ field }) => (
+              <FormField control={form.control} name="promoPrice" render={({ field }) => (
                 <FormItem><FormLabel>Preço Promo (R$)</FormLabel><FormControl><Input placeholder="12,90" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
               )} />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <FormField control={form.control} name="stock" render={({ field }) => (
-                <FormItem><FormLabel>Estoque</FormLabel><FormControl><Input type="number" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="active" render={({ field }) => (
-                <FormItem className="flex flex-col justify-end h-full pb-2">
-                  <div className="flex items-center gap-2">
-                    <input type="checkbox" id="active" checked={field.value} onChange={field.onChange} className="rounded text-primary focus:ring-primary" />
-                    <Label htmlFor="active" className="cursor-pointer">Produto Ativo</Label>
-                  </div>
-                </FormItem>
-              )} />
-            </div>
-            <FormField control={form.control} name="imageUrl" render={({ field }) => (
+            <FormField control={form.control} name="stock" render={({ field }) => (
+              <FormItem><FormLabel>Estoque</FormLabel><FormControl><Input type="number" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
+            )} />
+            <FormField control={form.control} name="image" render={({ field }) => (
               <FormItem><FormLabel>URL da Imagem (opcional)</FormLabel><FormControl><Input {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
             )} />
             <div className="pt-4 flex justify-end">

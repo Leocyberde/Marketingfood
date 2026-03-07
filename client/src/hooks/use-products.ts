@@ -2,18 +2,18 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api, buildUrl } from "@shared/routes";
 import { type InsertProduct } from "@shared/schema";
 
-export function useProducts(storeId?: number) {
+export function useProducts(merchantId?: number) {
   return useQuery({
-    queryKey: [api.products.list.path, storeId],
+    queryKey: [api.products.list.path, merchantId],
     queryFn: async () => {
-      const url = storeId 
-        ? `${api.products.list.path}?storeId=${storeId}`
+      const url = merchantId 
+        ? `${api.products.list.path}?merchantId=${merchantId}`
         : api.products.list.path;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch products");
       return api.products.list.responses[200].parse(await res.json());
     },
-    enabled: storeId !== undefined,
+    enabled: merchantId !== undefined,
   });
 }
 
@@ -30,7 +30,7 @@ export function useCreateProduct() {
       return api.products.create.responses[201].parse(await res.json());
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [api.products.list.path, variables.storeId] });
+      queryClient.invalidateQueries({ queryKey: [api.products.list.path, variables.merchantId] });
       queryClient.invalidateQueries({ queryKey: [api.products.list.path, undefined] });
     },
   });
@@ -50,7 +50,6 @@ export function useUpdateProduct() {
       return api.products.update.responses[200].parse(await res.json());
     },
     onSuccess: () => {
-      // Invalidate all product queries as we might not know the exact storeId here easily
       queryClient.invalidateQueries({ queryKey: [api.products.list.path] });
     },
   });

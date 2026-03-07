@@ -18,8 +18,8 @@ import { Label } from "@/components/ui/label";
 
 export function CartSheet() {
   const [isOpen, setIsOpen] = useState(false);
-  const [customerName, setCustomerName] = useState("");
-  const [customerAddress, setCustomerAddress] = useState("");
+  const [clientName, setClientName] = useState("");
+  const [deliveryPrice, setDeliveryPrice] = useState("0");
   const { items, storeId, updateQuantity, removeItem, clearCart, getTotal } = useCart();
   const { mutate: createOrder, isPending } = useCreateOrder();
   const { toast } = useToast();
@@ -29,17 +29,16 @@ export function CartSheet() {
 
   const handleCheckout = () => {
     if (!storeId || items.length === 0) return;
-    if (!customerName || !customerAddress) {
-      toast({ title: "Preencha seus dados", description: "Nome e endereço são obrigatórios.", variant: "destructive" });
+    if (!clientName) {
+      toast({ title: "Preencha seus dados", description: "Nome é obrigatório.", variant: "destructive" });
       return;
     }
 
     createOrder(
       {
-        storeId,
-        customerName,
-        customerAddress,
-        totalPrice: totalAmount,
+        merchantId: storeId,
+        clientName,
+        deliveryPrice: parseFloat(deliveryPrice) || 0,
         items: items.map(i => ({
           productId: i.product.id,
           quantity: i.quantity,
@@ -51,8 +50,8 @@ export function CartSheet() {
           toast({ title: "Pedido realizado!", description: "Seu pedido foi enviado ao restaurante." });
           clearCart();
           setIsOpen(false);
-          setCustomerName("");
-          setCustomerAddress("");
+          setClientName("");
+          setDeliveryPrice("0");
         },
         onError: (err) => {
           toast({ title: "Erro ao fazer pedido", description: err.message, variant: "destructive" });
@@ -96,9 +95,9 @@ export function CartSheet() {
               <div className="space-y-4">
                 {items.map((item) => (
                   <div key={item.product.id} className="flex gap-4 bg-card p-3 rounded-xl border border-border shadow-sm">
-                    {item.product.imageUrl && (
+                    {item.product.image && (
                       <div className="h-16 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
-                        <img src={item.product.imageUrl} alt={item.product.name} className="h-full w-full object-cover" />
+                        <img src={item.product.image} alt={item.product.name} className="h-full w-full object-cover" />
                       </div>
                     )}
                     <div className="flex-1 flex flex-col justify-between">
@@ -130,11 +129,11 @@ export function CartSheet() {
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <Label htmlFor="name">Seu Nome</Label>
-                    <Input id="name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ex: João Silva" className="bg-background" />
+                    <Input id="name" value={clientName} onChange={(e) => setClientName(e.target.value)} placeholder="Ex: João Silva" className="bg-background" />
                   </div>
                   <div className="space-y-1">
-                    <Label htmlFor="address">Endereço de Entrega</Label>
-                    <Input id="address" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} placeholder="Ex: Rua das Flores, 123 - Apto 4" className="bg-background" />
+                    <Label htmlFor="delivery">Preço de Entrega (R$)</Label>
+                    <Input id="delivery" value={deliveryPrice} onChange={(e) => setDeliveryPrice(e.target.value)} placeholder="0,00" className="bg-background" />
                   </div>
                 </div>
               </div>
