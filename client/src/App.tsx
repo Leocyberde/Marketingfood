@@ -1,16 +1,34 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 
+// Pages
+import StoreList from "./pages/cliente/StoreList";
+import StoreDetails from "./pages/cliente/StoreDetails";
+import LojistaDashboard from "./pages/lojista/Dashboard";
+import AdminDashboard from "./pages/admin/Dashboard";
+
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
-      {/* Fallback to 404 */}
+      <Route path="/">
+        {() => <Redirect to="/cliente" />}
+      </Route>
+      
+      {/* Cliente Routes */}
+      <Route path="/cliente" component={StoreList} />
+      <Route path="/cliente/loja/:id" component={StoreDetails} />
+      
+      {/* Lojista Routes */}
+      <Route path="/lojista" component={LojistaDashboard} />
+      
+      {/* Admin Routes */}
+      <Route path="/admin" component={AdminDashboard} />
+      
+      {/* Fallback */}
       <Route component={NotFound} />
     </Switch>
   );
