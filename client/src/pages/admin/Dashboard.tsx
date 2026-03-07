@@ -22,7 +22,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-secondary/30 p-6 rounded-2xl border border-border">
           <div>
             <h1 className="text-3xl font-display font-bold">Painel Admin</h1>
-            <p className="text-muted-foreground">Gerenciamento global de restaurantes.</p>
+            <p className="text-muted-foreground">Gerenciamento global de lojas.</p>
           </div>
           <StoreDialog />
         </div>

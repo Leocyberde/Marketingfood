@@ -11,8 +11,8 @@ export default function StoreList() {
     <AppLayout>
       <div className="space-y-8">
         <div className="space-y-2">
-          <h1 className="text-3xl md:text-4xl font-display font-bold">Perto de você</h1>
-          <p className="text-muted-foreground text-lg">Descubra os melhores restaurantes para pedir agora.</p>
+          <h1 className="text-3xl md:text-4xl font-display font-bold">Lojas perto de você</h1>
+          <p className="text-muted-foreground text-lg">Descubra os melhores produtos com entrega rápida.</p>
         </div>
 
         {isLoading ? (
@@ -58,7 +58,7 @@ export default function StoreList() {
                       </div>
                     </div>
                     <p className="text-muted-foreground text-sm line-clamp-2 mb-4 flex-1">
-                      {store.description || "O melhor restaurante da região com pratos deliciosos e entrega rápida."}
+                      {store.description || "A melhor loja da região com produtos de qualidade e entrega rápida."}
                     </p>
                     <div className="flex items-center text-xs text-muted-foreground gap-4 font-medium">
                       <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> 30-40 min</span>
@@ -72,7 +72,7 @@ export default function StoreList() {
             {stores?.length === 0 && (
               <div className="col-span-full py-12 text-center text-muted-foreground">
                 <StoreIcon className="h-12 w-12 mx-auto opacity-20 mb-4" />
-                <p className="text-xl font-medium">Nenhum restaurante encontrado.</p>
+                <p className="text-xl font-medium">Nenhuma loja encontrada.</p>
               </div>
             )}
           </div>

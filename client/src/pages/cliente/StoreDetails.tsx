@@ -28,7 +28,7 @@ export default function StoreDetails() {
 
   if (!store) return (
     <AppLayout>
-      <div className="text-center py-20">Restaurante não encontrado</div>
+      <div className="text-center py-20">Loja não encontrada</div>
     </AppLayout>
   );
 
@@ -36,7 +36,7 @@ export default function StoreDetails() {
     <AppLayout>
       <div className="space-y-8 pb-24"> {/* pb-24 for floating cart button space */}
         <Link href="/cliente" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-medium">
-          <ArrowLeft className="h-4 w-4" /> Voltar para restaurantes
+          <ArrowLeft className="h-4 w-4" /> Voltar para lojas
         </Link>
 
         {/* Store Header */}
@@ -59,7 +59,7 @@ export default function StoreDetails() {
         {/* Products */}
         <div>
           <h2 className="text-2xl font-display font-bold mb-6 flex items-center gap-2">
-            Cardápio
+            Produtos
           </h2>
           
           {isProductsLoading ? (
@@ -108,7 +108,7 @@ export default function StoreDetails() {
               
               {products?.filter(p => p.active).length === 0 && (
                 <div className="col-span-full py-12 text-center text-muted-foreground bg-muted/30 rounded-2xl border border-dashed">
-                  <p className="text-lg">Este restaurante ainda não adicionou produtos.</p>
+                  <p className="text-lg">Esta loja ainda não adicionou produtos.</p>
                 </div>
               )}
             </div>

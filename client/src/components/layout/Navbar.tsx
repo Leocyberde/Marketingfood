@@ -22,10 +22,10 @@ export function Navbar() {
           <div className="flex items-center gap-2">
             <Link href="/cliente" className="flex items-center gap-2 text-primary hover:opacity-80 transition-opacity">
               <div className="bg-primary text-primary-foreground p-2 rounded-xl shadow-sm">
-                <UtensilsCrossed className="h-5 w-5" />
+                <ShoppingBag className="h-5 w-5" />
               </div>
               <span className="font-display font-bold text-xl hidden sm:inline-block text-foreground">
-                Market<span className="text-primary">Food</span>
+                Market<span className="text-primary">Shop</span>
               </span>
             </Link>
           </div>

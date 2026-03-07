@@ -9,38 +9,54 @@ async function seedDatabase() {
     const existingStores = await storage.getStores();
     if (existingStores.length === 0) {
       const store1 = await storage.createStore({
-        name: "Lanchonete do Zé",
-        description: "Os melhores lanches da região",
-        imageUrl: "https://images.unsplash.com/photo-1571091718767-18b5b1457add?w=500&q=80",
+        name: "Eletrônicos TechWorld",
+        description: "As últimas novidades em tecnologia e gadgets",
+        imageUrl: "https://images.unsplash.com/photo-1550009158-9ebf69173e03?w=500&q=80",
         active: true,
       });
       
       const store2 = await storage.createStore({
-        name: "Pizzaria Bella Napoli",
-        description: "Pizza italiana autêntica",
-        imageUrl: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=500&q=80",
+        name: "Papelaria Criativa",
+        description: "Tudo para o seu escritório e estudos",
+        imageUrl: "https://images.unsplash.com/photo-1456735190827-d1262f71b8a3?w=500&q=80",
+        active: true,
+      });
+
+      const store3 = await storage.createStore({
+        name: "Auto Peças Central",
+        description: "Peças e acessórios para o seu veículo",
+        imageUrl: "https://images.unsplash.com/photo-1486262715619-67b85e0b08d3?w=500&q=80",
         active: true,
       });
 
       await storage.createProduct({
         storeId: store1.id,
-        name: "X-Tudo Mega",
-        description: "Hambúrguer, queijo, presunto, bacon, ovo, alface e tomate",
-        price: 3500,
-        imageUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=500&q=80",
+        name: "Fone de Ouvido Bluetooth",
+        description: "Cancelamento de ruído e bateria de longa duração",
+        price: 19900,
+        imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80",
         active: true,
       });
 
       await storage.createProduct({
         storeId: store2.id,
-        name: "Pizza Margherita",
-        description: "Molho de tomate, mussarela e manjericão fresco",
-        price: 5500,
-        imageUrl: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500&q=80",
+        name: "Caderno Inteligente",
+        description: "Folhas reposicionáveis e capa dura",
+        price: 8990,
+        imageUrl: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=500&q=80",
+        active: true,
+      });
+
+      await storage.createProduct({
+        storeId: store3.id,
+        name: "Óleo para Motor 5W30",
+        description: "Sintético de alta performance",
+        price: 4500,
+        imageUrl: "https://images.unsplash.com/photo-1635773054018-22c989ca400d?w=500&q=80",
         active: true,
       });
       
-      console.log("Database seeded successfully.");
+      console.log("Database seeded successfully with retail stores.");
     }
   } catch (error) {
     console.error("Error seeding database:", error);
