@@ -118,7 +118,7 @@ export async function registerRoutes(
       const bodySchema = api.products.create.input.extend({
         merchantId: z.coerce.number(),
         price: z.coerce.number(),
-        promoPrice: z.coerce.number().nullable(),
+        promoPrice: z.preprocess((val) => val === undefined || val === "" ? null : val, z.coerce.number().nullable()),
         stock: z.coerce.number(),
       });
       const input = bodySchema.parse(req.body);
@@ -137,11 +137,14 @@ export async function registerRoutes(
       const bodySchema = api.products.update.input.extend({
         merchantId: z.coerce.number().optional(),
         price: z.coerce.number().optional(),
-        promoPrice: z.coerce.number().nullable().optional(),
+        promoPrice: z.preprocess((val) => val === undefined || val === "" ? null : val, z.coerce.number().nullable().optional()),
         stock: z.coerce.number().optional(),
       });
       const input = bodySchema.parse(req.body);
       const product = await storage.updateProduct(Number(req.params.id), input);
+      if (!product) {
+        return res.status(404).json({ message: 'Product not found' });
+      }
       res.json(product);
     } catch (err) {
       if (err instanceof z.ZodError) {
@@ -152,6 +155,10 @@ export async function registerRoutes(
   });
 
   app.delete(api.products.delete.path, async (req, res) => {
+    const product = await storage.getProduct(Number(req.params.id));
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
     await storage.deleteProduct(Number(req.params.id));
     res.status(204).end();
   });
