@@ -85,7 +85,7 @@ export const api = {
       path: '/api/orders' as const,
       input: z.object({ merchantId: z.string().optional() }).optional(),
       responses: {
-        200: z.array(z.custom<typeof orders.$inferSelect & { items: typeof orderItems.$inferSelect[] }>()),
+        200: z.array(z.custom<typeof orders.$inferSelect & { items: (typeof orderItems.$inferSelect & { productName?: string })[] }>()),
       },
     },
     create: {

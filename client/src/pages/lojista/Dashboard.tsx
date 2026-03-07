@@ -109,9 +109,10 @@ export default function LojistaDashboard() {
                         <ul className="space-y-1 text-sm">
                           {order.items.map((item, idx) => {
                             const prod = products?.find(p => p.id === item.productId);
+                            const name = item.productName || prod?.name || 'Produto indisponível';
                             return (
                               <li key={idx} className="flex justify-between max-w-md">
-                                <span>{item.quantity}x {prod?.name || 'Produto indisponível'}</span>
+                                <span>{item.quantity}x {name}</span>
                                 <span className="text-muted-foreground">{formatCurrency(item.price)}</span>
                               </li>
                             );

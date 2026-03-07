@@ -22,7 +22,7 @@ export interface IStorage {
   deleteProduct(id: number): Promise<void>;
 
   // Orders
-  getOrders(merchantId?: number): Promise<(Order & { items: OrderItem[] })[]>;
+  getOrders(merchantId?: number): Promise<(Order & { items: (OrderItem & { productName?: string })[] })[]>;
   getOrder(id: number): Promise<(Order & { items: OrderItem[] }) | undefined>;
   createOrder(order: CreateOrderRequest): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order>;
@@ -74,7 +74,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(products).where(eq(products.id, id));
   }
 
-  async getOrders(merchantId?: number): Promise<(Order & { items: OrderItem[] })[]> {
+  async getOrders(merchantId?: number): Promise<(Order & { items: (OrderItem & { productName?: string })[] })[]> {
     const ordersList = merchantId 
       ? await db.select().from(orders).where(eq(orders.merchantId, merchantId))
       : await db.select().from(orders);
@@ -82,7 +82,12 @@ export class DatabaseStorage implements IStorage {
     const result = [];
     for (const order of ordersList) {
       const items = await db.select().from(orderItems).where(eq(orderItems.orderId, order.id));
-      result.push({ ...order, items });
+      const itemsWithProducts = [];
+      for (const item of items) {
+        const [product] = await db.select().from(products).where(eq(products.id, item.productId));
+        itemsWithProducts.push({ ...item, productName: product?.name });
+      }
+      result.push({ ...order, items: itemsWithProducts });
     }
     return result;
   }
