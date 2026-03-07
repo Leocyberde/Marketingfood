@@ -99,7 +99,7 @@ export class DatabaseStorage implements IStorage {
       merchantId: orderRequest.merchantId,
       clientName: orderRequest.clientName,
       deliveryPrice: orderRequest.deliveryPrice,
-      status: "pending"
+      status: "novo_pedido"
     }).returning();
 
     for (const item of orderRequest.items) {
