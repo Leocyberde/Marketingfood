@@ -31,22 +31,9 @@ export default function StoreList() {
               <Link key={store.id} href={`/cliente/loja/${store.id}`}>
                 <div className="group cursor-pointer bg-card rounded-2xl border border-border overflow-hidden hover-lift flex flex-col h-full">
                   <div className="h-48 w-full bg-muted relative overflow-hidden">
-                    {store.imageUrl ? (
-                      <img 
-                        src={store.imageUrl} 
-                        alt={store.name} 
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-secondary text-muted-foreground">
-                        <StoreIcon className="h-12 w-12 opacity-50" />
-                      </div>
-                    )}
-                    {!store.active && (
-                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center">
-                        <span className="font-bold text-lg px-4 py-2 bg-background rounded-full border shadow-sm">Fechado</span>
-                      </div>
-                    )}
+                    <div className="w-full h-full flex items-center justify-center bg-secondary text-muted-foreground">
+                      <StoreIcon className="h-12 w-12 opacity-50" />
+                    </div>
                   </div>
                   
                   <div className="p-5 flex-1 flex flex-col">
@@ -58,7 +45,7 @@ export default function StoreList() {
                       </div>
                     </div>
                     <p className="text-muted-foreground text-sm line-clamp-2 mb-4 flex-1">
-                      {store.description || "A melhor loja da região com produtos de qualidade e entrega rápida."}
+                      A melhor loja da região com produtos de qualidade e entrega rápida.
                     </p>
                     <div className="flex items-center text-xs text-muted-foreground gap-4 font-medium">
                       <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> 30-40 min</span>

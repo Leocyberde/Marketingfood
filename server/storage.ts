@@ -1,8 +1,8 @@
 import { db } from "./db";
 import { 
-  merchants, products, orders, orderItems,
-  type Merchant, type Product, type Order, type OrderItem,
-  type InsertMerchant, type InsertProduct, type InsertOrder, type InsertOrderItem,
+  merchants, products, orders, orderItems, clientAddresses,
+  type Merchant, type Product, type Order, type OrderItem, type ClientAddress,
+  type InsertMerchant, type InsertProduct, type InsertOrder, type InsertOrderItem, type InsertClientAddress,
   type CreateOrderRequest
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -26,6 +26,13 @@ export interface IStorage {
   getOrder(id: number): Promise<(Order & { items: OrderItem[] }) | undefined>;
   createOrder(order: CreateOrderRequest): Promise<Order>;
   updateOrderStatus(id: number, status: string): Promise<Order>;
+
+  // Addresses
+  getAddresses(): Promise<ClientAddress[]>;
+  getAddress(id: number): Promise<ClientAddress | undefined>;
+  createAddress(address: InsertClientAddress): Promise<ClientAddress>;
+  updateAddress(id: number, updates: Partial<InsertClientAddress>): Promise<ClientAddress>;
+  deleteAddress(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -122,6 +129,38 @@ export class DatabaseStorage implements IStorage {
   async updateOrderStatus(id: number, status: string): Promise<Order> {
     const [updated] = await db.update(orders).set({ status }).where(eq(orders.id, id)).returning();
     return updated;
+  }
+
+  // Addresses
+  async getAddresses(): Promise<ClientAddress[]> {
+    return await db.select().from(clientAddresses);
+  }
+
+  async getAddress(id: number): Promise<ClientAddress | undefined> {
+    const [address] = await db.select().from(clientAddresses).where(eq(clientAddresses.id, id));
+    return address;
+  }
+
+  async createAddress(address: InsertClientAddress): Promise<ClientAddress> {
+    // Se este endereço for definido como principal, desmarcar os outros
+    if (address.isMain) {
+      await db.update(clientAddresses).set({ isMain: false });
+    }
+    const [newAddress] = await db.insert(clientAddresses).values(address).returning();
+    return newAddress;
+  }
+
+  async updateAddress(id: number, updates: Partial<InsertClientAddress>): Promise<ClientAddress> {
+    // Se este endereço for definido como principal, desmarcar os outros
+    if (updates.isMain) {
+      await db.update(clientAddresses).set({ isMain: false });
+    }
+    const [updated] = await db.update(clientAddresses).set(updates).where(eq(clientAddresses.id, id)).returning();
+    return updated;
+  }
+
+  async deleteAddress(id: number): Promise<void> {
+    await db.delete(clientAddresses).where(eq(clientAddresses.id, id));
   }
 }
 

@@ -8,6 +8,7 @@ import NotFound from "@/pages/not-found";
 // Pages
 import StoreList from "./pages/cliente/StoreList";
 import StoreDetails from "./pages/cliente/StoreDetails";
+import AddressManager from "./pages/cliente/AddressManager";
 import LojistaDashboard from "./pages/lojista/Dashboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 
@@ -21,6 +22,7 @@ function Router() {
       {/* Cliente Routes */}
       <Route path="/cliente" component={StoreList} />
       <Route path="/cliente/loja/:id" component={StoreDetails} />
+      <Route path="/cliente/enderecos" component={AddressManager} />
       
       {/* Lojista Routes */}
       <Route path="/lojista" component={LojistaDashboard} />

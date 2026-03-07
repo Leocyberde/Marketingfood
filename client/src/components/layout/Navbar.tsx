@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Store, User, Settings, ShoppingBag, UtensilsCrossed } from "lucide-react";
+import { Store, User, Settings, ShoppingBag, UtensilsCrossed, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCart } from "@/store/use-cart";
 import { Button } from "@/components/ui/button";
@@ -52,14 +52,28 @@ export function Navbar() {
             })}
             
             {location.startsWith("/cliente") && (
-              <Button variant="outline" size="icon" className="relative ml-2 rounded-full border-primary/20 text-primary hover:bg-primary/5">
-                <ShoppingBag className="h-5 w-5" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
-                    {totalItems}
-                  </span>
-                )}
-              </Button>
+              <>
+                <Link
+                  href="/cliente/enderecos"
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-2 rounded-full text-sm font-medium transition-all duration-200",
+                    location === "/cliente/enderecos"
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:bg-secondary hover:text-foreground"
+                  )}
+                >
+                  <MapPin className="h-4 w-4" />
+                  <span className="hidden sm:inline-block">Enderecos</span>
+                </Link>
+                <Button variant="outline" size="icon" className="relative ml-2 rounded-full border-primary/20 text-primary hover:bg-primary/5">
+                  <ShoppingBag className="h-5 w-5" />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
+                      {totalItems}
+                    </span>
+                  )}
+                </Button>
+              </>
             )}
           </div>
         </div>

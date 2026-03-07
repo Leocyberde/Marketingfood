@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { insertMerchantSchema, insertProductSchema, merchants, products, orders, orderItems, createOrderSchema } from './schema';
+import { insertMerchantSchema, insertProductSchema, merchants, products, orders, orderItems, createOrderSchema, clientAddresses, insertClientAddressSchema } from './schema';
 
 export const errorSchemas = {
   validation: z.object({ message: z.string(), field: z.string().optional() }),
@@ -103,6 +103,41 @@ export const api = {
       input: z.object({ status: z.string() }),
       responses: {
         200: z.custom<typeof orders.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    }
+  },
+  addresses: {
+    list: {
+      method: 'GET' as const,
+      path: '/api/cliente/endereco' as const,
+      responses: {
+        200: z.array(z.custom<typeof clientAddresses.$inferSelect>()),
+      },
+    },
+    create: {
+      method: 'POST' as const,
+      path: '/api/cliente/endereco' as const,
+      input: insertClientAddressSchema,
+      responses: {
+        201: z.custom<typeof clientAddresses.$inferSelect>(),
+        400: errorSchemas.validation,
+      },
+    },
+    update: {
+      method: 'PUT' as const,
+      path: '/api/cliente/endereco/:id' as const,
+      input: insertClientAddressSchema.partial(),
+      responses: {
+        200: z.custom<typeof clientAddresses.$inferSelect>(),
+        404: errorSchemas.notFound,
+      },
+    },
+    delete: {
+      method: 'DELETE' as const,
+      path: '/api/cliente/endereco/:id' as const,
+      responses: {
+        204: z.void(),
         404: errorSchemas.notFound,
       },
     }

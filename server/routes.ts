@@ -215,6 +215,60 @@ export async function registerRoutes(
     }
   });
 
+  // Addresses
+  app.get(api.addresses.list.path, async (req, res) => {
+    const addresses = await storage.getAddresses();
+    res.json(addresses);
+  });
+
+  app.post(api.addresses.create.path, async (req, res) => {
+    try {
+      const bodySchema = api.addresses.create.input.extend({
+        latitude: z.coerce.number(),
+        longitude: z.coerce.number(),
+        isMain: z.preprocess((val) => val === 'true' || val === true, z.boolean()).optional(),
+      });
+      const input = bodySchema.parse(req.body);
+      const address = await storage.createAddress(input);
+      res.status(201).json(address);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
+      }
+      throw err;
+    }
+  });
+
+  app.put(api.addresses.update.path, async (req, res) => {
+    try {
+      const bodySchema = api.addresses.update.input.extend({
+        latitude: z.coerce.number().optional(),
+        longitude: z.coerce.number().optional(),
+        isMain: z.preprocess((val) => val === 'true' || val === true, z.boolean()).optional(),
+      });
+      const input = bodySchema.parse(req.body);
+      const address = await storage.updateAddress(Number(req.params.id), input);
+      if (!address) {
+        return res.status(404).json({ message: 'Address not found' });
+      }
+      res.json(address);
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(400).json({ message: err.errors[0].message, field: err.errors[0].path.join('.') });
+      }
+      throw err;
+    }
+  });
+
+  app.delete(api.addresses.delete.path, async (req, res) => {
+    const address = await storage.getAddress(Number(req.params.id));
+    if (!address) {
+      return res.status(404).json({ message: 'Address not found' });
+    }
+    await storage.deleteAddress(Number(req.params.id));
+    res.status(204).end();
+  });
+
   // Seed the database
   seedDatabase();
 

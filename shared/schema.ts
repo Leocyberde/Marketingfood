@@ -39,20 +39,38 @@ export const orderItems = sqliteTable("order_items", {
   price: real("price").notNull(),
 });
 
+export const clientAddresses = sqliteTable("client_addresses", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(),
+  street: text("street").notNull(),
+  number: text("number").notNull(),
+  neighborhood: text("neighborhood").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  zipCode: text("zip_code").notNull(),
+  complement: text("complement"),
+  latitude: real("latitude").notNull(),
+  longitude: real("longitude").notNull(),
+  isMain: integer("is_main", { mode: "boolean" }).notNull().default(false),
+});
+
 export const insertMerchantSchema = createInsertSchema(merchants).omit({ id: true });
 export const insertProductSchema = createInsertSchema(products).omit({ id: true });
 export const insertOrderSchema = createInsertSchema(orders).omit({ id: true, createdAt: true });
 export const insertOrderItemSchema = createInsertSchema(orderItems).omit({ id: true });
+export const insertClientAddressSchema = createInsertSchema(clientAddresses).omit({ id: true });
 
 export type Merchant = typeof merchants.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type Order = typeof orders.$inferSelect;
 export type OrderItem = typeof orderItems.$inferSelect;
+export type ClientAddress = typeof clientAddresses.$inferSelect;
 
 export type InsertMerchant = z.infer<typeof insertMerchantSchema>;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 export type InsertOrderItem = z.infer<typeof insertOrderItemSchema>;
+export type InsertClientAddress = z.infer<typeof insertClientAddressSchema>;
 
 export const createOrderSchema = z.object({
   merchantId: z.number(),
