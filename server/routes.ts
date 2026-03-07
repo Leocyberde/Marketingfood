@@ -83,7 +83,11 @@ export async function registerRoutes(
 
   app.post(api.merchants.create.path, async (req, res) => {
     try {
-      const input = api.merchants.create.input.parse(req.body);
+      const bodySchema = api.merchants.create.input.extend({
+        lat: z.coerce.number(),
+        lng: z.coerce.number(),
+      });
+      const input = bodySchema.parse(req.body);
       const merchant = await storage.createMerchant(input);
       res.status(201).json(merchant);
     } catch (err) {
@@ -96,8 +100,15 @@ export async function registerRoutes(
 
   app.put(api.merchants.update.path, async (req, res) => {
     try {
-      const input = api.merchants.update.input.parse(req.body);
+      const bodySchema = api.merchants.update.input.extend({
+        lat: z.coerce.number().optional(),
+        lng: z.coerce.number().optional(),
+      });
+      const input = bodySchema.parse(req.body);
       const merchant = await storage.updateMerchant(Number(req.params.id), input);
+      if (!merchant) {
+        return res.status(404).json({ message: 'Merchant not found' });
+      }
       res.json(merchant);
     } catch (err) {
       if (err instanceof z.ZodError) {
