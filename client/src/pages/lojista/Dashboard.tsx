@@ -27,6 +27,7 @@ import { useToast } from "@/hooks/use-toast";
 import { z } from "zod";
 
 const STATUS_COLORS: Record<string, string> = {
+  novo_pedido: "bg-orange-500/10 text-orange-600 border-orange-200",
   pending: "bg-red-500/10 text-red-600 border-red-200",
   accepted: "bg-blue-500/10 text-blue-600 border-blue-200",
   preparing: "bg-yellow-500/10 text-yellow-600 border-yellow-200",
@@ -36,6 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 const STATUS_LABELS: Record<string, string> = {
+  novo_pedido: "Novo Pedido",
   pending: "Pendente",
   accepted: "Aceito",
   preparing: "Preparando",
