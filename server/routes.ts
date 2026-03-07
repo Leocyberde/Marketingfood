@@ -118,6 +118,8 @@ export async function registerRoutes(
       const bodySchema = api.products.create.input.extend({
         storeId: z.coerce.number(),
         price: z.coerce.number(),
+        promotionalPrice: z.coerce.number().nullable(),
+        stock: z.coerce.number(),
       });
       const input = bodySchema.parse(req.body);
       const product = await storage.createProduct(input);
@@ -135,6 +137,8 @@ export async function registerRoutes(
       const bodySchema = api.products.update.input.extend({
         storeId: z.coerce.number().optional(),
         price: z.coerce.number().optional(),
+        promotionalPrice: z.coerce.number().nullable().optional(),
+        stock: z.coerce.number().optional(),
       });
       const input = bodySchema.parse(req.body);
       const product = await storage.updateProduct(Number(req.params.id), input);

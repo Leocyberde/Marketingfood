@@ -154,7 +154,17 @@ export default function LojistaDashboard() {
                       <h3 className="font-bold text-lg mb-1">{product.name}</h3>
                       <p className="text-muted-foreground text-sm flex-1 mb-3 line-clamp-2">{product.description}</p>
                       <div className="flex justify-between items-center mt-auto pt-4 border-t border-border">
-                        <span className="font-bold text-primary text-lg">{formatCurrency(product.price)}</span>
+                        <div className="flex flex-col">
+                          {product.promotionalPrice ? (
+                            <>
+                              <span className="text-xs text-muted-foreground line-through">{formatCurrency(product.price)}</span>
+                              <span className="font-bold text-primary text-lg">{formatCurrency(product.promotionalPrice)}</span>
+                            </>
+                          ) : (
+                            <span className="font-bold text-primary text-lg">{formatCurrency(product.price)}</span>
+                          )}
+                          <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Estoque: {product.stock}</span>
+                        </div>
                         <div className="flex gap-2">
                           <ProductDialog storeId={storeId} product={product} />
                           <DeleteProductButton id={product.id} />
@@ -213,16 +223,26 @@ function ProductDialog({ storeId, product }: { storeId: number, product?: any })
       name: product?.name || "",
       description: product?.description || "",
       priceStr: product ? (product.price / 100).toFixed(2).replace('.', ',') : "",
+      promotionalPriceStr: product?.promotionalPrice ? (product.promotionalPrice / 100).toFixed(2).replace('.', ',') : "",
+      stock: product?.stock || 0,
+      category: product?.category || "",
       imageUrl: product?.imageUrl || "",
       active: product ? product.active : true,
-      price: product?.price || 0, // hidden field satisfied by transform
+      price: product?.price || 0,
     }
   });
 
   const onSubmit = (values: any) => {
     const cents = parseCurrencyToCents(values.priceStr);
-    const payload = { ...values, price: cents };
+    const promotionalCents = values.promotionalPriceStr ? parseCurrencyToCents(values.promotionalPriceStr) : null;
+    const payload = { 
+      ...values, 
+      price: cents,
+      promotionalPrice: promotionalCents,
+      stock: parseInt(values.stock)
+    };
     delete payload.priceStr;
+    delete payload.promotionalPriceStr;
 
     if (product) {
       updateProduct.mutate({ id: product.id, ...payload }, {
@@ -256,9 +276,20 @@ function ProductDialog({ storeId, product }: { storeId: number, product?: any })
             <FormField control={form.control} name="description" render={({ field }) => (
               <FormItem><FormLabel>Descrição</FormLabel><FormControl><Textarea {...field} className="bg-background resize-none" /></FormControl><FormMessage /></FormItem>
             )} />
+            <FormField control={form.control} name="category" render={({ field }) => (
+              <FormItem><FormLabel>Categoria</FormLabel><FormControl><Input {...field} className="bg-background" placeholder="Ex: Periféricos, Escritório..." /></FormControl><FormMessage /></FormItem>
+            )} />
             <div className="grid grid-cols-2 gap-4">
               <FormField control={form.control} name="priceStr" render={({ field }) => (
                 <FormItem><FormLabel>Preço (R$)</FormLabel><FormControl><Input placeholder="15,90" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
+              )} />
+              <FormField control={form.control} name="promotionalPriceStr" render={({ field }) => (
+                <FormItem><FormLabel>Preço Promo (R$)</FormLabel><FormControl><Input placeholder="12,90" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
+              )} />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <FormField control={form.control} name="stock" render={({ field }) => (
+                <FormItem><FormLabel>Estoque</FormLabel><FormControl><Input type="number" {...field} className="bg-background" /></FormControl><FormMessage /></FormItem>
               )} />
               <FormField control={form.control} name="active" render={({ field }) => (
                 <FormItem className="flex flex-col justify-end h-full pb-2">
