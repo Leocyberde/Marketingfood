@@ -177,6 +177,31 @@ export const appRouter = router({
     updateStatus: publicProcedure
       .input(z.object({ id: z.number(), status: z.enum(["pending", "preparing", "sent", "delivered", "cancelled"]) }))
       .mutation(({ input }) => db.updateOrderStatus(input.id, input.status)),
+    create: protectedProcedure
+      .input(
+        z.object({
+          storeId: z.number(),
+          subtotal: z.string(),
+          deliveryFee: z.string(),
+          commission: z.string(),
+          total: z.string(),
+          deliveryDistance: z.number().optional(),
+          deliveryLatitude: z.number().optional(),
+          deliveryLongitude: z.number().optional(),
+          items: z.array(
+            z.object({
+              productId: z.number(),
+              quantity: z.number(),
+              price: z.string(),
+            })
+          ),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const customer = await db.getCustomerByUserId(ctx.user.id);
+        if (!customer) throw new TRPCError({ code: "NOT_FOUND", message: "Customer profile not found" });
+        return db.createOrder({ ...input, customerId: customer.id, items: undefined }, input.items);
+      }),
   }),
 
   // ============ REVIEWS ============
@@ -187,6 +212,21 @@ export const appRouter = router({
     getByProduct: publicProcedure
       .input(z.object({ productId: z.number() }))
       .query(({ input }) => db.getReviewsByProduct(input.productId)),
+    create: protectedProcedure
+      .input(
+        z.object({
+          orderId: z.number(),
+          storeId: z.number().optional(),
+          productId: z.number().optional(),
+          rating: z.number().min(1).max(5),
+          comment: z.string().optional(),
+        })
+      )
+      .mutation(async ({ input, ctx }) => {
+        const customer = await db.getCustomerByUserId(ctx.user.id);
+        if (!customer) throw new TRPCError({ code: "NOT_FOUND" });
+        return db.createReview({ ...input, customerId: customer.id });
+      }),
   }),
 
   // ============ DELIVERY ZONES ============
@@ -220,9 +260,28 @@ export const appRouter = router({
       .mutation(({ input }) => db.deleteDeliveryZone(input.id)),
   }),
 
-  // ============ ADMIN STATISTICS ============
+  // ============ ADMIN & SETTINGS ============
   admin: router({
-    statistics: publicProcedure.query(() => db.getAdminStatistics()),
+    statistics: adminProcedure.query(() => db.getAdminStatistics()),
+    getSettings: adminProcedure.query(() => db.getSystemSettings()),
+    updateSettings: adminProcedure
+      .input(
+        z.object({
+          commissionPercentage: z.string().optional(),
+          haversineMultiplier: z.number().optional(),
+        })
+      )
+      .mutation(({ input }) => db.updateSystemSettings(input)),
+    getSalesReport: adminProcedure.query(() => db.getSalesReport()),
+  }),
+
+  // ============ STORE REPORTS ============
+  store: router({
+    getSalesReport: storeProcedure.query(async ({ ctx }) => {
+      const store = await db.getStoreByUserId(ctx.user.id);
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+      return db.getSalesReport(store.id);
+    }),
   }),
 });
 

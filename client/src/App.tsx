@@ -13,6 +13,11 @@ import StoreProducts from "./pages/StoreProducts";
 import StoreOrders from "./pages/StoreOrders";
 import StoreProfile from "./pages/StoreProfile";
 import ClientCatalog from "./pages/ClientCatalog";
+import ClientCheckout from "./pages/ClientCheckout";
+import ClientOrders from "./pages/ClientOrders";
+import ClientRateOrder from "./pages/ClientRateOrder";
+import ClientProfile from "./pages/ClientProfile";
+import StoreReports from "./pages/StoreReports";
 
 function Router() {
   return (
@@ -32,6 +37,13 @@ function Router() {
       
       {/* Client Routes */}
       <Route path={"/catalog"} component={ClientCatalog} />
+      <Route path={"/checkout"} component={ClientCheckout} />
+      <Route path={"/orders"} component={ClientOrders} />
+      <Route path={"/rate-order/:orderId"} component={ClientRateOrder} />
+      <Route path={"/profile"} component={ClientProfile} />
+      
+      {/* Store Reports */}
+      <Route path={"/store/reports"} component={StoreReports} />
       
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}

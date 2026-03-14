@@ -406,3 +406,33 @@ export async function getAdminStatistics() {
     activeOrders: activeOrders[0]?.count || 0,
   };
 }
+
+export async function updateSystemSettings(settingsData: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await getSystemSettings();
+  if (existing) {
+    return db.update(systemSettings).set({ ...settingsData, updatedAt: new Date() }).where(eq(systemSettings.id, existing.id));
+  } else {
+    return db.insert(systemSettings).values(settingsData);
+  }
+}
+
+export async function getSalesReport(storeId?: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  if (storeId) {
+    return db
+      .select()
+      .from(orders)
+      .where(sql`${orders.status} = 'delivered' AND ${orders.storeId} = ${storeId}`)
+      .orderBy(desc(orders.createdAt));
+  }
+
+  return db
+    .select()
+    .from(orders)
+    .where(eq(orders.status, "delivered"))
+    .orderBy(desc(orders.createdAt));
+}

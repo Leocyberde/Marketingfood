@@ -2,6 +2,7 @@ import { useCart } from "@/hooks/useCart";
 import { Button } from "@/components/ui/button";
 import { X, Trash2, ShoppingCart, Plus, Minus, Package } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "wouter";
 
 interface CartDrawerProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface CartDrawerProps {
 }
 
 export default function CartDrawer({ open, onClose }: CartDrawerProps) {
+  const navigate = useNavigate();
   const { cart, removeItem, updateQty, clearCart, total, count } = useCart();
 
   if (!open) return null;
@@ -124,7 +126,10 @@ export default function CartDrawer({ open, onClose }: CartDrawerProps) {
             </div>
             <Button
               className="w-full h-12 text-base font-bold btn-primary"
-              onClick={() => toast.info("Checkout em breve! Funcionalidade de pagamento sendo integrada.")}
+              onClick={() => {
+                onClose();
+                navigate("/checkout");
+              }}
             >
               Finalizar Pedido →
             </Button>

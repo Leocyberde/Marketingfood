@@ -37,9 +37,25 @@ function toRad(degrees: number): number {
  * Até 5 km → R$ 12,00
  * Acima de 5 km → R$ 12,00 + R$ 2,00 por km adicional
  * @param distanceKm Distância em km
+ * @param zones Zonas de entrega (opcional)
  * @returns Taxa de entrega em reais
  */
-export function calculateDeliveryFee(distanceKm: number): number {
+export function calculateDeliveryFee(
+  distanceKm: number,
+  zones?: Array<{ minDistanceKm: number; maxDistanceKm: number; baseFee: string; perKmFee?: string }>
+): number {
+  if (zones && zones.length > 0) {
+    const zone = zones.find(
+      (z) => distanceKm >= z.minDistanceKm && distanceKm <= z.maxDistanceKm
+    );
+    if (zone) {
+      const baseFee = Number(zone.baseFee);
+      const perKmFee = Number(zone.perKmFee || 0);
+      const additionalKm = Math.max(0, distanceKm - zone.minDistanceKm);
+      return baseFee + additionalKm * perKmFee;
+    }
+  }
+
   const BASE_FEE = 12;
   const ADDITIONAL_FEE_PER_KM = 2;
   const THRESHOLD_KM = 5;
