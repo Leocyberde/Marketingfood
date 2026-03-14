@@ -33,3 +33,7 @@ outputType = "webview"
 deploymentTarget = "autoscale"
 run = ["node", "dist/index.js"]
 build = ["pnpm", "run", "build"]
+
+[[ports]]
+localPort = 5000
+externalPort = 80
