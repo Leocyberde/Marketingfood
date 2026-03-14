@@ -68,7 +68,12 @@ export const appRouter = router({
           id: z.number(),
           name: z.string().optional(),
           description: z.string().optional(),
+          logo: z.string().optional(),
           address: z.string().optional(),
+          city: z.string().optional(),
+          state: z.string().optional(),
+          zipCode: z.string().optional(),
+          number: z.string().optional(),
           phone: z.string().optional(),
           email: z.string().optional(),
         })

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2, Package, ImagePlus, X, Home, Tag } from "lucide-react";
+import { Plus, Edit, Trash2, Package, ImagePlus, X, Home, Tag, UserCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "wouter";
 
@@ -84,11 +84,18 @@ export default function StoreProducts() {
         {/* Header */}
         <div className="flex justify-between items-center mb-10">
           <div>
-            <div className="flex items-center gap-3 mb-1">
+            <div className="flex items-center gap-2 mb-1">
               <Link href="/"><Button variant="ghost" size="sm" className="text-slate-400 hover:text-white p-1"><Home className="w-4 h-4" /></Button></Link>
               <h1 className="text-4xl font-black text-white">Painel do Lojista</h1>
             </div>
-            <p className="text-orange-400 ml-10">{store?.name || "Loja"} — {products?.length || 0} produtos</p>
+            <div className="flex items-center gap-3 ml-10">
+              <p className="text-orange-400">{store?.name || "Loja"} — {products?.length || 0} produtos</p>
+              <Link href="/store/profile">
+                <Button variant="outline" size="sm" className="border-slate-600 text-slate-300 hover:text-white hover:border-orange-400 text-xs flex items-center gap-1 h-7">
+                  <UserCircle className="w-3 h-3" /> Perfil da Loja
+                </Button>
+              </Link>
+            </div>
           </div>
 
           <Dialog open={isOpen} onOpenChange={(v) => { setIsOpen(v); if (!v) { setEditId(null); setFormData({ ...EMPTY_FORM }); } }}>

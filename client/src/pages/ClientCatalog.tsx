@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { ShoppingCart, Star, Home, Search, Tag, Package } from "lucide-react";
-import { toast } from "sonner";
 import { Link } from "wouter";
+import { useCart } from "@/hooks/useCart";
+import ProductModal from "@/components/ProductModal";
+import CartDrawer from "@/components/CartDrawer";
 
 export default function ClientCatalog() {
   const { data: categories } = trpc.categories.list.useQuery();
@@ -16,7 +18,10 @@ export default function ClientCatalog() {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedStore, setSelectedStore] = useState<number | null>(null);
   const [search, setSearch] = useState("");
-  const [cart, setCart] = useState<Array<{ productId: number; name: string; price: number; qty: number }>>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const { count, total, addItem } = useCart();
 
   const filtered = (allProducts || []).filter((p) => {
     if (selectedCategory && p.categoryId !== selectedCategory) return false;
@@ -25,43 +30,44 @@ export default function ClientCatalog() {
     return true;
   });
 
-  const addToCart = (p: any) => {
-    const price = p.salePrice ? Number(p.salePrice) : Number(p.price);
-    setCart((prev) => {
-      const existing = prev.find((i) => i.productId === p.id);
-      if (existing) return prev.map((i) => i.productId === p.id ? { ...i, qty: i.qty + 1 } : i);
-      return [...prev, { productId: p.id, name: p.name, price, qty: 1 }];
-    });
-    toast.success(`${p.name} adicionado ao carrinho!`);
-  };
-
-  const cartTotal = cart.reduce((sum, i) => sum + i.price * i.qty, 0);
-  const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-orange-900">
       {/* Top Bar */}
-      <div className="border-b border-cyan-500/20 bg-slate-950/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-cyan-500/20 bg-slate-950/60 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center gap-4">
           <Link href="/"><Button variant="ghost" size="sm" className="text-slate-400 hover:text-white p-1"><Home className="w-4 h-4" /></Button></Link>
-          <h1 className="text-xl font-black text-white">🛒 Catálogo</h1>
+          <h1 className="text-xl font-black text-white shrink-0">🛒 Catálogo</h1>
           <div className="flex-1 relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-            <Input className="pl-9 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 h-9 focus:border-cyan-400" placeholder="Buscar produtos..." value={search} onChange={(e) => setSearch(e.target.value)} />
+            <Input
+              className="pl-9 bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-500 h-9 focus:border-cyan-400"
+              placeholder="Buscar produtos..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-          {cart.length > 0 && (
-            <div className="flex items-center gap-2 bg-orange-500/20 border border-orange-500/40 rounded-lg px-3 py-1.5">
-              <ShoppingCart className="w-4 h-4 text-orange-400" />
-              <span className="text-orange-300 font-bold text-sm">{cartCount} itens — R$ {cartTotal.toFixed(2)}</span>
-            </div>
-          )}
+
+          {/* Cart Button */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative flex items-center gap-2 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-500/40 rounded-lg px-3 py-2 transition-colors"
+          >
+            <ShoppingCart className="w-4 h-4 text-orange-400" />
+            {count > 0 ? (
+              <>
+                <span className="text-orange-300 font-bold text-sm hidden sm:inline">R$ {total.toFixed(2)}</span>
+                <span className="absolute -top-1.5 -right-1.5 bg-orange-500 text-white text-xs font-black w-5 h-5 rounded-full flex items-center justify-center">{count}</span>
+              </>
+            ) : (
+              <span className="text-slate-400 text-sm">Carrinho</span>
+            )}
+          </button>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-6 flex gap-6">
         {/* Sidebar */}
-        <aside className="w-52 shrink-0 space-y-4">
-          {/* Categorias */}
+        <aside className="w-52 shrink-0 space-y-5">
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Categorias</p>
             <div className="space-y-1">
@@ -76,7 +82,6 @@ export default function ClientCatalog() {
             </div>
           </div>
 
-          {/* Lojas */}
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Lojas</p>
             <div className="space-y-1">
@@ -92,7 +97,7 @@ export default function ClientCatalog() {
           </div>
         </aside>
 
-        {/* Products */}
+        {/* Products Grid */}
         <main className="flex-1">
           <div className="flex items-center justify-between mb-4">
             <p className="text-slate-400 text-sm">{filtered.length} produtos encontrados</p>
@@ -112,8 +117,11 @@ export default function ClientCatalog() {
                 const discount = hasSale ? Math.round((1 - Number(product.salePrice) / Number(product.price)) * 100) : 0;
 
                 return (
-                  <Card key={product.id} className="card-cinematic group overflow-hidden flex flex-col">
-                    {/* Image */}
+                  <Card
+                    key={product.id}
+                    className="card-cinematic group overflow-hidden flex flex-col cursor-pointer hover:border-cyan-500/40 transition-all"
+                    onClick={() => setSelectedProduct(product)}
+                  >
                     <div className="relative h-40 bg-slate-800 overflow-hidden">
                       {imgs && imgs.length > 0 ? (
                         <img src={imgs[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -125,14 +133,17 @@ export default function ClientCatalog() {
                           <Tag className="w-3 h-3" /> -{discount}%
                         </div>
                       )}
-                      {product.stock === 0 && <div className="absolute inset-0 bg-black/60 flex items-center justify-center"><span className="text-white font-bold text-sm">Sem estoque</span></div>}
+                      {product.stock === 0 && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">Sem estoque</span>
+                        </div>
+                      )}
                     </div>
 
                     <CardContent className="p-3 flex flex-col gap-2 flex-1">
                       <h3 className="font-bold text-white text-sm leading-tight line-clamp-2">{product.name}</h3>
                       {product.description && <p className="text-slate-400 text-xs line-clamp-2">{product.description}</p>}
 
-                      {/* Rating */}
                       <div className="flex items-center gap-1">
                         {[...Array(5)].map((_, i) => (
                           <Star key={i} className={`w-3 h-3 ${i < Math.round(Number(product.rating || 0)) ? "fill-orange-400 text-orange-400" : "text-slate-700"}`} />
@@ -140,7 +151,6 @@ export default function ClientCatalog() {
                         <span className="text-slate-500 text-xs ml-1">({product.totalReviews})</span>
                       </div>
 
-                      {/* Price */}
                       <div className="mt-auto">
                         {hasSale ? (
                           <div>
@@ -157,7 +167,11 @@ export default function ClientCatalog() {
 
                       <Button
                         className={`w-full h-8 text-xs font-bold ${hasSale ? "bg-orange-500 hover:bg-orange-600 text-white" : "btn-primary"}`}
-                        onClick={() => addToCart(product)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          addItem({ productId: product.id, name: product.name, price: displayPrice, image: imgs?.[0] });
+                          import("sonner").then(({ toast }) => toast.success(`${product.name} adicionado!`));
+                        }}
                         disabled={product.stock === 0}
                       >
                         <ShoppingCart className="w-3 h-3 mr-1" />
@@ -178,32 +192,13 @@ export default function ClientCatalog() {
         </main>
       </div>
 
-      {/* Floating Cart */}
-      {cart.length > 0 && (
-        <div className="fixed bottom-6 right-6 z-20">
-          <Card className="bg-slate-900 border-orange-500/40 shadow-lg shadow-orange-500/10 w-72">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-bold text-white flex items-center gap-2"><ShoppingCart className="w-4 h-4 text-orange-400" /> Carrinho ({cartCount})</h3>
-                <button onClick={() => setCart([])} className="text-slate-500 hover:text-red-400 text-xs">Limpar</button>
-              </div>
-              <div className="space-y-1 max-h-36 overflow-y-auto mb-3">
-                {cart.map((item) => (
-                  <div key={item.productId} className="flex items-center justify-between text-xs">
-                    <span className="text-slate-300 truncate flex-1">{item.name}</span>
-                    <span className="text-slate-400 ml-2 shrink-0">{item.qty}x R$ {item.price.toFixed(2)}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="border-t border-slate-700 pt-3 flex items-center justify-between">
-                <span className="text-slate-400 text-sm">Total:</span>
-                <span className="text-orange-400 font-black">R$ {cartTotal.toFixed(2)}</span>
-              </div>
-              <Button className="w-full mt-3 btn-primary text-sm h-9" onClick={() => toast.info("Checkout em breve!")}>Finalizar Pedido</Button>
-            </CardContent>
-          </Card>
-        </div>
+      {/* Product Modal */}
+      {selectedProduct && (
+        <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
       )}
+
+      {/* Cart Drawer */}
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import AdminCategories from "./pages/AdminCategories";
 import AdminDelivery from "./pages/AdminDelivery";
 import StoreProducts from "./pages/StoreProducts";
 import StoreOrders from "./pages/StoreOrders";
+import StoreProfile from "./pages/StoreProfile";
 import ClientCatalog from "./pages/ClientCatalog";
 
 function Router() {
@@ -27,6 +28,7 @@ function Router() {
       {/* Store Routes */}
       <Route path={"/store/products"} component={StoreProducts} />
       <Route path={"/store/orders"} component={StoreOrders} />
+      <Route path={"/store/profile"} component={StoreProfile} />
       
       {/* Client Routes */}
       <Route path={"/catalog"} component={ClientCatalog} />
