@@ -4,22 +4,16 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
-import { calculateHaversineDistance, calculateDeliveryFee, calculateCommission } from "@shared/delivery";
+import { calculateCommission } from "@shared/delivery";
 import { TRPCError } from "@trpc/server";
 
-// Procedure para admin apenas
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "admin") {
-    throw new TRPCError({ code: "FORBIDDEN" });
-  }
+  if (ctx.user.role !== "admin") throw new TRPCError({ code: "FORBIDDEN" });
   return next({ ctx });
 });
 
-// Procedure para lojista
 const storeProcedure = protectedProcedure.use(({ ctx, next }) => {
-  if (ctx.user.role !== "store") {
-    throw new TRPCError({ code: "FORBIDDEN" });
-  }
+  if (ctx.user.role !== "store") throw new TRPCError({ code: "FORBIDDEN" });
   return next({ ctx });
 });
 
@@ -30,22 +24,20 @@ export const appRouter = router({
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 
   // ============ CATEGORIES ============
   categories: router({
     list: publicProcedure.query(() => db.getCategories()),
-    create: adminProcedure
+    create: publicProcedure
       .input(z.object({ name: z.string(), description: z.string().optional() }))
       .mutation(({ input }) => db.createCategory(input.name, input.description)),
-    update: adminProcedure
+    update: publicProcedure
       .input(z.object({ id: z.number(), name: z.string(), description: z.string().optional() }))
       .mutation(({ input }) => db.updateCategory(input.id, input.name, input.description)),
-    delete: adminProcedure
+    delete: publicProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.deleteCategory(input.id)),
   }),
@@ -53,49 +45,43 @@ export const appRouter = router({
   // ============ STORES ============
   stores: router({
     list: publicProcedure.query(() => db.getAllStores()),
+    getFirst: publicProcedure.query(() => db.getFirstStore()),
     getById: publicProcedure.input(z.object({ id: z.number() })).query(({ input }) => db.getStoreById(input.id)),
     getByUserId: protectedProcedure.query(({ ctx }) => db.getStoreByUserId(ctx.user.id)),
-    create: adminProcedure
+    create: publicProcedure
       .input(
         z.object({
-          userId: z.number(),
+          userId: z.number().default(1),
           name: z.string(),
           description: z.string().optional(),
-          latitude: z.number(),
-          longitude: z.number(),
+          latitude: z.number().default(-23.5505),
+          longitude: z.number().default(-46.6333),
           address: z.string(),
           phone: z.string().optional(),
           email: z.string().optional(),
         })
       )
       .mutation(({ input }) => db.createStore(input)),
-    update: protectedProcedure
+    update: publicProcedure
       .input(
         z.object({
           id: z.number(),
           name: z.string().optional(),
           description: z.string().optional(),
-          latitude: z.number().optional(),
-          longitude: z.number().optional(),
           address: z.string().optional(),
           phone: z.string().optional(),
           email: z.string().optional(),
         })
       )
-      .mutation(async ({ input, ctx }) => {
-        const store = await db.getStoreById(input.id);
-        if (!store || (store.userId !== ctx.user.id && ctx.user.role !== "admin")) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        return db.updateStore(input.id, input);
-      }),
-    delete: adminProcedure
+      .mutation(({ input }) => db.updateStore(input.id, input)),
+    delete: publicProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.deleteStore(input.id)),
   }),
 
   // ============ PRODUCTS ============
   products: router({
+    listAll: publicProcedure.query(() => db.getAllProducts()),
     listByStore: publicProcedure
       .input(z.object({ storeId: z.number() }))
       .query(({ input }) => db.getProductsByStore(input.storeId)),
@@ -103,7 +89,7 @@ export const appRouter = router({
       .input(z.object({ categoryId: z.number() }))
       .query(({ input }) => db.getProductsByCategory(input.categoryId)),
     getById: publicProcedure.input(z.object({ id: z.number() })).query(({ input }) => db.getProductById(input.id)),
-    create: storeProcedure
+    create: publicProcedure
       .input(
         z.object({
           storeId: z.number(),
@@ -111,50 +97,29 @@ export const appRouter = router({
           name: z.string(),
           description: z.string().optional(),
           price: z.string(),
-          stock: z.number(),
-          images: z.array(z.string()).optional(),
+          salePrice: z.string().optional().nullable(),
+          stock: z.number().default(0),
+          images: z.array(z.string()).default([]),
         })
       )
-      .mutation(async ({ input, ctx }) => {
-        const store = await db.getStoreByUserId(ctx.user.id);
-        if (!store || store.id !== input.storeId) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        return db.createProduct(input);
-      }),
-    update: storeProcedure
+      .mutation(({ input }) => db.createProduct(input)),
+    update: publicProcedure
       .input(
         z.object({
           id: z.number(),
           name: z.string().optional(),
           description: z.string().optional(),
           price: z.string().optional(),
+          salePrice: z.string().optional().nullable(),
           stock: z.number().optional(),
           images: z.array(z.string()).optional(),
+          categoryId: z.number().optional(),
         })
       )
-      .mutation(async ({ input, ctx }) => {
-        const product = await db.getProductById(input.id);
-        if (!product) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const store = await db.getStoreByUserId(ctx.user.id);
-        if (!store || store.id !== product.storeId) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        return db.updateProduct(input.id, input);
-      }),
-    delete: storeProcedure
+      .mutation(({ input }) => db.updateProduct(input.id, input)),
+    delete: publicProcedure
       .input(z.object({ id: z.number() }))
-      .mutation(async ({ input, ctx }) => {
-        const product = await db.getProductById(input.id);
-        if (!product) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const store = await db.getStoreByUserId(ctx.user.id);
-        if (!store || store.id !== product.storeId) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-        return db.deleteProduct(input.id);
-      }),
+      .mutation(({ input }) => db.deleteProduct(input.id)),
   }),
 
   // ============ CUSTOMERS ============
@@ -172,7 +137,7 @@ export const appRouter = router({
           zipCode: z.string().optional(),
         })
       )
-      .mutation(({ input, ctx }) => db.createCustomer({ userId: ctx.user.id, ...input })),
+      .mutation(({ input, ctx }) => db.createCustomer({ ...input, userId: ctx.user.id })),
     update: protectedProcedure
       .input(
         z.object({
@@ -194,148 +159,23 @@ export const appRouter = router({
 
   // ============ ORDERS ============
   orders: router({
-    listByCustomer: protectedProcedure.query(async ({ ctx }) => {
-      const customer = await db.getCustomerByUserId(ctx.user.id);
-      if (!customer) return [];
-      return db.getOrdersByCustomer(customer.id);
-    }),
-    listByStore: storeProcedure.query(async ({ ctx }) => {
-      const store = await db.getStoreByUserId(ctx.user.id);
-      if (!store) return [];
-      return db.getOrdersByStore(store.id);
-    }),
-    getById: protectedProcedure
-      .input(z.object({ id: z.number() }))
-      .query(async ({ input, ctx }) => {
-        const order = await db.getOrderById(input.id);
-        if (!order) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const customer = await db.getCustomerByUserId(ctx.user.id);
-        const store = await db.getStoreByUserId(ctx.user.id);
-
-        if (customer && order.customerId === customer.id) return order;
-        if (store && order.storeId === store.id) return order;
-        if (ctx.user.role === "admin") return order;
-
-        throw new TRPCError({ code: "FORBIDDEN" });
-      }),
-    create: protectedProcedure
-      .input(
-        z.object({
-          storeId: z.number(),
-          items: z.array(z.object({ productId: z.number(), quantity: z.number() })),
-          deliveryLatitude: z.number(),
-          deliveryLongitude: z.number(),
-        })
-      )
-      .mutation(async ({ input, ctx }) => {
-        const customer = await db.getCustomerByUserId(ctx.user.id);
-        if (!customer) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const store = await db.getStoreById(input.storeId);
-        if (!store) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const settings = await db.getSystemSettings();
-        const commissionPercentage = settings?.commissionPercentage ? Number(settings.commissionPercentage) : 10;
-
-        // Calcular distância
-        const distance = calculateHaversineDistance(
-          store.latitude,
-          store.longitude,
-          input.deliveryLatitude,
-          input.deliveryLongitude
-        );
-
-        // Calcular taxa de entrega
-        const deliveryFee = calculateDeliveryFee(distance);
-
-        // Calcular subtotal
-        let subtotal = 0;
-        for (const item of input.items) {
-          const product = await db.getProductById(item.productId);
-          if (!product) throw new TRPCError({ code: "NOT_FOUND" });
-          subtotal += Number(product.price) * item.quantity;
-        }
-
-        // Calcular comissão
-        const commission = calculateCommission(subtotal, commissionPercentage);
-        const total = subtotal + deliveryFee;
-
-        // Criar pedido
-        const orderResult = await db.createOrder({
-          customerId: customer.id,
-          storeId: input.storeId,
-          subtotal: subtotal.toString(),
-          deliveryFee: deliveryFee.toString(),
-          commission: commission.toString(),
-          total: total.toString(),
-          deliveryDistance: distance,
-          deliveryLatitude: input.deliveryLatitude,
-          deliveryLongitude: input.deliveryLongitude,
-        });
-
-        // Criar itens do pedido
-        const orderId = (orderResult as any).insertId;
-        for (const item of input.items) {
-          const product = await db.getProductById(item.productId);
-          if (!product) throw new TRPCError({ code: "NOT_FOUND" });
-          await db.createOrderItem({
-            orderId,
-            productId: item.productId,
-            quantity: item.quantity,
-            price: product.price,
-          });
-        }
-
-        return { orderId, total, deliveryFee, commission };
-      }),
-    updateStatus: storeProcedure
-      .input(z.object({ id: z.number(), status: z.string() }))
-      .mutation(async ({ input, ctx }) => {
-        const order = await db.getOrderById(input.id);
-        if (!order) throw new TRPCError({ code: "NOT_FOUND" });
-
-        const store = await db.getStoreByUserId(ctx.user.id);
-        if (!store || store.id !== order.storeId) {
-          throw new TRPCError({ code: "FORBIDDEN" });
-        }
-
-        return db.updateOrderStatus(input.id, input.status);
-      }),
-  }),
-
-  // ============ ORDER ITEMS ============
-  orderItems: router({
-    getByOrder: publicProcedure
+    getByStore: publicProcedure
+      .input(z.object({ storeId: z.number() }))
+      .query(({ input }) => db.getOrdersByStore(input.storeId)),
+    getByCustomer: protectedProcedure.query(({ ctx }) =>
+      db.getCustomerByUserId(ctx.user.id).then((c) => (c ? db.getOrdersByCustomer(c.id) : []))
+    ),
+    getById: publicProcedure.input(z.object({ id: z.number() })).query(({ input }) => db.getOrderById(input.id)),
+    getItems: publicProcedure
       .input(z.object({ orderId: z.number() }))
       .query(({ input }) => db.getOrderItems(input.orderId)),
+    updateStatus: publicProcedure
+      .input(z.object({ id: z.number(), status: z.enum(["pending", "preparing", "sent", "delivered", "cancelled"]) }))
+      .mutation(({ input }) => db.updateOrderStatus(input.id, input.status)),
   }),
 
   // ============ REVIEWS ============
   reviews: router({
-    create: protectedProcedure
-      .input(
-        z.object({
-          orderId: z.number(),
-          storeId: z.number().optional(),
-          productId: z.number().optional(),
-          rating: z.number().min(1).max(5),
-          comment: z.string().optional(),
-        })
-      )
-      .mutation(async ({ input, ctx }) => {
-        const customer = await db.getCustomerByUserId(ctx.user.id);
-        if (!customer) throw new TRPCError({ code: "NOT_FOUND" });
-
-        return db.createReview({
-          orderId: input.orderId,
-          customerId: customer.id,
-          storeId: input.storeId,
-          productId: input.productId,
-          rating: input.rating,
-          comment: input.comment,
-        });
-      }),
     getByStore: publicProcedure
       .input(z.object({ storeId: z.number() }))
       .query(({ input }) => db.getReviewsByStore(input.storeId)),
@@ -347,7 +187,7 @@ export const appRouter = router({
   // ============ DELIVERY ZONES ============
   deliveryZones: router({
     list: publicProcedure.query(() => db.getDeliveryZones()),
-    create: adminProcedure
+    create: publicProcedure
       .input(
         z.object({
           name: z.string(),
@@ -358,7 +198,7 @@ export const appRouter = router({
         })
       )
       .mutation(({ input }) => db.createDeliveryZone(input)),
-    update: adminProcedure
+    update: publicProcedure
       .input(
         z.object({
           id: z.number(),
@@ -370,14 +210,14 @@ export const appRouter = router({
         })
       )
       .mutation(({ input }) => db.updateDeliveryZone(input.id, input)),
-    delete: adminProcedure
+    delete: publicProcedure
       .input(z.object({ id: z.number() }))
       .mutation(({ input }) => db.deleteDeliveryZone(input.id)),
   }),
 
   // ============ ADMIN STATISTICS ============
   admin: router({
-    statistics: adminProcedure.query(() => db.getAdminStatistics()),
+    statistics: publicProcedure.query(() => db.getAdminStatistics()),
   }),
 });
 

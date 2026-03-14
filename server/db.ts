@@ -159,6 +159,19 @@ export async function getAllStores() {
   return db.select().from(stores).where(eq(stores.isActive, true));
 }
 
+export async function getFirstStore() {
+  const db = await getDb();
+  if (!db) return null;
+  const result = await db.select().from(stores).where(eq(stores.isActive, true)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function getAllProducts() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(products);
+}
+
 export async function createStore(storeData: any) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");

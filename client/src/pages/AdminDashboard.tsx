@@ -1,11 +1,11 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { Users, Store, ShoppingCart, TrendingUp } from "lucide-react";
+import { Users, Store, ShoppingCart, TrendingUp, Home } from "lucide-react";
+import { Link } from "wouter";
 
 export default function AdminDashboard() {
-  const { user } = useAuth();
   const { data: statistics, isLoading } = trpc.admin.statistics.useQuery();
 
   if (isLoading) {
@@ -55,8 +55,11 @@ export default function AdminDashboard() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-12">
-          <h1 className="text-5xl font-black text-white mb-2">Dashboard Administrativo</h1>
-          <p className="text-cyan-400 text-lg">Bem-vindo, {user?.name || "Administrador"}</p>
+          <div className="flex items-center gap-3 mb-1">
+            <Link href="/"><Button variant="ghost" size="sm" className="text-slate-400 hover:text-white p-1"><Home className="w-4 h-4" /></Button></Link>
+            <h1 className="text-5xl font-black text-white">Dashboard Administrativo</h1>
+          </div>
+          <p className="text-cyan-400 text-lg ml-10">Visão geral do marketplace</p>
         </div>
 
         {/* Stats Grid */}

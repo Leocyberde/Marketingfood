@@ -82,6 +82,7 @@ export const products = pgTable("products", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
+  salePrice: decimal("salePrice", { precision: 10, scale: 2 }),
   stock: integer("stock").default(0).notNull(),
   images: json("images").$type<string[]>().default([]).notNull(),
   rating: decimal("rating", { precision: 3, scale: 2 }).default("0"),
