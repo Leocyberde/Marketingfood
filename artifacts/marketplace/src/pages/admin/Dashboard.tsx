@@ -56,7 +56,7 @@ export function AdminDashboard() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         {[
-          { label: "Receita Total", value: `R$ ${stats?.totalRevenue?.toFixed(2) || '0.00'}`, icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
+          { label: "Receita Total", value: `R$ ${Number(stats?.totalRevenue ?? 0).toFixed(2).replace('.', ',')}`, icon: TrendingUp, color: "text-green-500", bg: "bg-green-500/10" },
           { label: "Lojas Ativas", value: stats?.activeStores || 0, icon: Store, color: "text-blue-500", bg: "bg-blue-500/10" },
           { label: "Total de Produtos", value: stats?.totalProducts || 0, icon: Package, color: "text-purple-500", bg: "bg-purple-500/10" },
           { label: "Pedidos Pendentes", value: stats?.pendingOrders || 0, icon: ClipboardList, color: "text-orange-500", bg: "bg-orange-500/10" },

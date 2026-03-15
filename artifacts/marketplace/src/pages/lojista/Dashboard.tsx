@@ -137,7 +137,7 @@ export function LojistaDashboard() {
                   <div className="text-sm mt-2">
                     <strong className="text-foreground">Itens:</strong> {order.items.map(i => `${i.quantity}x ${i.productName}`).join(', ')}
                   </div>
-                  <p className="font-black text-primary mt-2">R$ {order.total.toFixed(2).replace('.', ',')}</p>
+                  <p className="font-black text-primary mt-2">R$ {Number(order.total).toFixed(2).replace('.', ',')}</p>
                 </div>
                 
                 <div className="flex flex-col gap-2 w-full md:w-auto">
@@ -186,7 +186,7 @@ export function LojistaDashboard() {
                 {products?.map(p => (
                   <tr key={p.id} className="hover:bg-muted/10 transition-colors">
                     <td className="p-4 font-bold">{p.name}</td>
-                    <td className="p-4 text-primary font-black">R$ {p.price.toFixed(2).replace('.', ',')}</td>
+                    <td className="p-4 text-primary font-black">R$ {Number(p.price).toFixed(2).replace('.', ',')}</td>
                     <td className="p-4">{p.stock}</td>
                     <td className="p-4">
                       <span className={`px-2 py-1 rounded-lg text-xs font-bold ${p.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>

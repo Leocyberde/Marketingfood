@@ -94,7 +94,7 @@ export function ClienteStore() {
                   
                   <div className="flex items-center justify-between mt-auto">
                     <span className="font-black text-xl text-primary">
-                      R$ {product.price.toFixed(2).replace('.', ',')}
+                      R$ {Number(product.price).toFixed(2).replace('.', ',')}
                     </span>
                     
                     <button

@@ -80,12 +80,12 @@ export function ClienteOrder() {
             {order.items.map((item, i) => (
               <div key={i} className="flex justify-between items-center text-sm">
                 <span><span className="font-bold text-primary">{item.quantity}x</span> {item.productName}</span>
-                <span className="font-bold text-muted-foreground">R$ {item.subtotal.toFixed(2).replace('.', ',')}</span>
+                <span className="font-bold text-muted-foreground">R$ {Number(item.subtotal).toFixed(2).replace('.', ',')}</span>
               </div>
             ))}
             <div className="pt-4 mt-4 border-t border-border flex justify-between items-center text-lg">
               <span className="font-bold">Total</span>
-              <span className="font-black text-foreground">R$ {order.total.toFixed(2).replace('.', ',')}</span>
+              <span className="font-black text-foreground">R$ {Number(order.total).toFixed(2).replace('.', ',')}</span>
             </div>
           </div>
         </div>

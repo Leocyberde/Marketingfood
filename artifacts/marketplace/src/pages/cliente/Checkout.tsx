@@ -95,7 +95,7 @@ export function ClienteCheckout() {
                 <div key={item.id} className="flex flex-col sm:flex-row gap-4 items-center sm:items-start p-4 bg-muted/30 rounded-2xl">
                   <div className="flex-1 text-center sm:text-left">
                     <h3 className="font-bold text-lg">{item.name}</h3>
-                    <p className="text-primary font-black">R$ {item.price.toFixed(2).replace('.', ',')}</p>
+                    <p className="text-primary font-black">R$ {Number(item.price).toFixed(2).replace('.', ',')}</p>
                   </div>
                   
                   <div className="flex items-center gap-4">
