@@ -1,64 +1,100 @@
-# Marketplace Regional
+# Workspace
 
-A full-stack regional marketplace platform connecting small local shops (lojistas) with customers (clientes), with an admin panel for platform management.
+## Overview
 
-## Architecture
+Marketplace Local para lojinhas de bairro (eletrônicos, livraria, roupas, adega, etc.).
+pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
-- **Frontend**: React 19 + Vite 7 + TailwindCSS 4 + shadcn/ui
-- **Backend**: Express + tRPC (served via Vite middleware in dev)
-- **Database**: PostgreSQL (Replit built-in) via Drizzle ORM
-- **Auth**: Manus OAuth (requires VITE_OAUTH_PORTAL_URL, VITE_APP_ID, OAUTH_SERVER_URL, JWT_SECRET)
-- **Language**: TypeScript throughout
+## Stack
 
-## Project Structure
+- **Monorepo tool**: pnpm workspaces
+- **Node.js version**: 24
+- **Package manager**: pnpm
+- **TypeScript version**: 5.9
+- **Frontend**: React + Vite + Tailwind CSS (artifacts/marketplace)
+- **API framework**: Express 5 (artifacts/api-server)
+- **Database**: PostgreSQL + Drizzle ORM
+- **Validation**: Zod (`zod/v4`), `drizzle-zod`
+- **API codegen**: Orval (from OpenAPI spec)
+- **State**: Zustand (cart state)
+- **Build**: esbuild (CJS bundle)
 
+## Features
+
+### Marketplace Local (BairroMarket)
+- 3 painéis acessíveis via barra de navegação persistente (sem login):
+  - **/cliente** - Painel do Cliente: busca lojas/produtos por categoria, carrinho, pedidos
+  - **/lojista** - Painel do Lojista: seleciona sua loja, gerencia produtos e pedidos
+  - **/admin** - Painel do Administrador: estatísticas, gerencia lojas e pedidos
+
+### Categorias disponíveis
+Eletrônicos, Livraria, Roupas, Adega, Padaria, Farmácia, Mercadinho, Petshop
+
+## Structure
+
+```text
+artifacts-monorepo/
+├── artifacts/              # Deployable applications
+│   ├── api-server/         # Express API server
+│   └── marketplace/        # React + Vite frontend (BairroMarket)
+├── lib/                    # Shared libraries
+│   ├── api-spec/           # OpenAPI spec + Orval codegen config
+│   ├── api-client-react/   # Generated React Query hooks
+│   ├── api-zod/            # Generated Zod schemas from OpenAPI
+│   └── db/                 # Drizzle ORM schema + DB connection
+│       └── src/schema/
+│           ├── categories.ts
+│           ├── stores.ts
+│           ├── products.ts
+│           └── orders.ts
+├── scripts/                # Utility scripts
+├── pnpm-workspace.yaml
+├── tsconfig.base.json
+├── tsconfig.json
+└── package.json
 ```
-client/         React frontend (Vite root)
-server/         Express backend + tRPC routers
-  _core/        Core infrastructure (auth, OAuth, vite, env, trpc)
-  db.ts         Database query helpers
-  routers.ts    tRPC router definitions
-shared/         Shared types and utilities
-drizzle/        DB schema (PostgreSQL) and migrations metadata
-```
 
-## Running the App
+## TypeScript & Composite Projects
 
-The dev server runs as a single Express process serving both API and Vite frontend:
+Every package extends `tsconfig.base.json` which sets `composite: true`. The root `tsconfig.json` lists all packages as project references. This means:
 
-```bash
-PORT=5000 pnpm dev
-```
+- **Always typecheck from the root** — run `pnpm run typecheck`
+- **`emitDeclarationOnly`** — we only emit `.d.ts` files during typecheck
+- **Project references** — when package A depends on package B, A's `tsconfig.json` must list B in its `references` array.
 
-This runs on port 5000. The workflow is configured as "Start application".
+## Root Scripts
 
-## Database
+- `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages
+- `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
-Uses Replit's built-in PostgreSQL. Schema includes:
-- users, categories, stores, products, customers
-- orders, orderItems, reviews, deliveryZones, systemSettings
+## Packages
 
-Custom enums: `role` (user/store/admin), `order_status` (pending/preparing/sent/delivered/cancelled)
+### `artifacts/marketplace` (`@workspace/marketplace`)
 
-## Environment Variables Required
+React + Vite frontend. Routes:
+- `/` → redirect to /cliente
+- `/cliente` → Painel do Cliente
+- `/lojista` → Painel do Lojista
+- `/admin` → Painel do Administrador
 
-- `DATABASE_URL` - PostgreSQL connection string (auto-set by Replit)
-- `VITE_OAUTH_PORTAL_URL` - Manus OAuth portal URL
-- `VITE_APP_ID` - Manus application ID  
-- `OAUTH_SERVER_URL` - Manus OAuth server URL
-- `JWT_SECRET` - JWT signing secret
-- `OWNER_OPEN_ID` - OpenID of the admin user
+### `artifacts/api-server` (`@workspace/api-server`)
 
-## User Roles
+Express 5 API server. Routes in `src/routes/`:
+- `categories.ts` — GET /api/categories
+- `stores.ts` — CRUD /api/stores, /api/stores/:id
+- `products.ts` — CRUD /api/products, /api/stores/:storeId/products
+- `orders.ts` — CRUD /api/orders, /api/stores/:storeId/orders
+- `stats.ts` — GET /api/stats
 
-- **admin** (administrador): Full platform management
-- **store** (lojista): Manage own products and orders
-- **user** (cliente): Browse catalog, place orders
+### `lib/db` (`@workspace/db`)
 
-## Key Features
+Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client instance and schema models.
 
-- Role-based access control via tRPC procedures
-- Haversine distance calculation for delivery zones
-- Automatic 10% commission calculation
-- Delivery fee calculation based on distance
-- Admin dashboard with platform statistics
+- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`)
+- Run migrations: `pnpm --filter @workspace/db run push`
+
+### `lib/api-spec` (`@workspace/api-spec`)
+
+Owns the OpenAPI 3.1 spec (`openapi.yaml`) and the Orval config (`orval.config.ts`).
+
+Run codegen: `pnpm --filter @workspace/api-spec run codegen`
