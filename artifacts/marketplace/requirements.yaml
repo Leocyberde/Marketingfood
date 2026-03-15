@@ -1,0 +1,21 @@
+packages:
+  "framer-motion": "For fluid layout animations and page transitions"
+  "recharts": "For displaying beautiful charts in the Admin and Lojista dashboards"
+  "zustand": "For dead-simple Cart and Lojista session state management"
+  "react-hook-form": "For robust form handling in create/edit modals"
+  "@hookform/resolvers": "Zod validation for forms"
+  "zod": "Schema validation for forms"
+  "date-fns": "For formatting order dates elegantly"
+
+images:
+  - path: "artifacts/marketplace/public/images/hero.png"
+    description: "Warm, colorful illustration of a friendly neighborhood street market with small shops, sunny day, vibrant warm colors, cozy local community vibe, vector art style"
+    aspect_ratio: "16:9"
+  - path: "artifacts/marketplace/public/images/empty-cart.png"
+    description: "Cute empty shopping basket illustration, warm soft colors, friendly and welcoming style"
+    aspect_ratio: "1:1"
+
+notes:
+  - "The app requires no authentication, allowing direct access to Cliente, Lojista, and Admin routes."
+  - "Cart state is managed client-side via Zustand and synced to localStorage."
+  - "Lojista 'login' is simulated by selecting a store from a list and saving the ID in Zustand."
